@@ -1,7 +1,9 @@
 package imup
 
 import (
+	"bytes"
 	"io"
+	"io/ioutil"
 	"mime/multipart"
 	"net/http"
 	"os"
@@ -61,6 +63,13 @@ func New(key string, r *http.Request, opts *Options) (*UploadedImage, error) {
 	var err error
 	ui := &UploadedImage{}
 
+	// Check file size.
+	if opts.MaxFileSize > 0 {
+		if !isValidSize(r, opts.MaxFileSize) {
+			return nil, ErrFileSize
+		}
+	}
+
 	// Try to parse the multipart file from the request.
 	if ui.file, ui.header, err = r.FormFile(key); err != nil {
 		return nil, err
@@ -71,19 +80,6 @@ func New(key string, r *http.Request, opts *Options) (*UploadedImage, error) {
 		if !isTypeAllowed(ui, opts.AllowedTypes) {
 			return nil, ErrDisallowedType
 		}
-	}
-
-	// Check file size.
-	if ui.Size, err = ui.file.Seek(0, 2); err != nil {
-		return nil, err
-	}
-	if ui.Size > opts.MaxFileSize {
-		return nil, ErrFileSize
-	}
-
-	// Reset file pointer.
-	if _, err = ui.file.Seek(0, 0); err != nil {
-		return nil, err
 	}
 
 	return ui, nil
@@ -133,27 +129,47 @@ func (ui *UploadedImage) Close() {
 	ui.file.Close()
 }
 
+// isValidSize checks if the given file size is within the max limit.
+func isValidSize(r *http.Request, maxSize int64) bool {
+	// Read the request body up to maxSize+1.
+	lr := io.LimitReader(r.Body, maxSize+1)
+	b, err := ioutil.ReadAll(lr)
+	if err != nil {
+		return false
+	}
+
+	// If the read length is greater than the max file size.
+	if int64(len(b)) > maxSize {
+		return false
+	}
+
+	// Reset the request body.
+	r.Body = ioutil.NopCloser(bytes.NewBuffer(b))
+
+	return true
+}
+
 // isTypeAllowed checks if the given file type is allowed.
-func isTypeAllowed(img *UploadedImage, types ImageTypes) bool {
+func isTypeAllowed(ui *UploadedImage, types ImageTypes) bool {
 	// Get up to the first 512 bytes of data.
 	b := make([]byte, 512)
-	_, err := img.file.Read(b)
+	_, err := ui.file.Read(b)
 	if err != nil {
 		return false
 	}
 
 	// Reset file pointer.
-	if _, err = img.file.Seek(0, 0); err != nil {
+	if _, err = ui.file.Seek(0, 0); err != nil {
 		return false
 	}
 
 	// Try to detect the file type.
-	img.Type = http.DetectContentType(b)
+	ui.Type = http.DetectContentType(b)
 
 	// Validate type.
-	if _, ok := types[img.Type]; ok {
-		return true
+	if _, ok := types[ui.Type]; !ok {
+		return false
 	}
 
-	return false
+	return true
 }
