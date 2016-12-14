@@ -7,6 +7,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"os"
+	"strconv"
 )
 
 // ImageTypes defines the allowed types for an uploaded image.
@@ -63,8 +64,18 @@ func New(key string, r *http.Request, opts *Options) (*UploadedImage, error) {
 	var err error
 	ui := &UploadedImage{}
 
-	// Check file size.
+	// Handle max file size.
 	if opts.MaxFileSize > 0 {
+		// Check Content-Length header.
+		cl, err := strconv.ParseInt(r.Header.Get("Content-Length"), 10, 64)
+		if err != nil {
+			return nil, err
+		}
+		if cl > opts.MaxFileSize {
+			return nil, ErrFileSize
+		}
+
+		// Check request body length.
 		if !isValidSize(r, opts.MaxFileSize) {
 			return nil, ErrFileSize
 		}
