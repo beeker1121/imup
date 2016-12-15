@@ -15,7 +15,7 @@ This project was created for [MailDB.io](https://maildb.io/), check us out!
 - Set allowable image formats
 - Supports max file size limit
 - Reads data only up to max file size limit, will not eat up bandwidth
-- Handles spoofed Content-Type header
+- Handles spoofed Content-Length header
 
 ## Installation
 
