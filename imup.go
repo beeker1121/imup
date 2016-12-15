@@ -67,10 +67,7 @@ func New(key string, r *http.Request, opts *Options) (*UploadedImage, error) {
 	// Handle max file size.
 	if opts.MaxFileSize > 0 {
 		// Check Content-Length header.
-		cl, err := strconv.ParseInt(r.Header.Get("Content-Length"), 10, 64)
-		if err != nil {
-			return nil, err
-		}
+		cl, _ := strconv.ParseInt(r.Header.Get("Content-Length"), 10, 64)
 		if cl > opts.MaxFileSize {
 			return nil, ErrFileSize
 		}
