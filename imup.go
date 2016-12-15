@@ -158,12 +158,13 @@ func isTypeAllowed(ui *UploadedImage, types ImageTypes) error {
 }
 
 // limitReader wraps io.LimitedReader, Read returns ErrFileSize
-// when the limit is exceeded rather than io.EOF like io.LimitedReader
+// when the limit is exceeded rather than io.EOF like io.LimitedReader.
 type limitReader struct {
 	r *io.LimitedReader
 	io.Closer
 }
 
+// newLimitReader creates a new limitReader.
 func newLimitReader(r io.ReadCloser, maxSize int64) io.ReadCloser {
 	return &limitReader{
 		r:      io.LimitReader(r, maxSize+1).(*io.LimitedReader),
@@ -171,6 +172,7 @@ func newLimitReader(r io.ReadCloser, maxSize int64) io.ReadCloser {
 	}
 }
 
+// Read satisfies the io.Reader interface.
 func (l *limitReader) Read(p []byte) (int, error) {
 	n, err := l.r.Read(p)
 	if l.r.N < 1 {
