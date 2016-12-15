@@ -13,6 +13,7 @@ import (
 // ImageTypes defines the allowed types for an uploaded image.
 type ImageTypes map[string]bool
 
+// Define the image types.
 var (
 	GIF  ImageTypes = ImageTypes{"image/gif": true}
 	PNG  ImageTypes = ImageTypes{"image/png": true}
