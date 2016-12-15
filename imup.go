@@ -16,7 +16,6 @@ type ImageTypes map[string]bool
 var (
 	GIF  ImageTypes = ImageTypes{"image/gif": true}
 	PNG  ImageTypes = ImageTypes{"image/png": true}
-	JPG  ImageTypes = ImageTypes{"image/jpg": true}
 	JPEG ImageTypes = ImageTypes{"image/jpeg": true}
 	BMP  ImageTypes = ImageTypes{"image/bmp": true}
 	WEBP ImageTypes = ImageTypes{"image/webp": true}
@@ -26,7 +25,6 @@ var (
 	PopularTypes ImageTypes = ImageTypes{
 		"image/gif":  true,
 		"image/png":  true,
-		"image/jpg":  true,
 		"image/jpeg": true,
 	}
 
@@ -34,7 +32,6 @@ var (
 	AllTypes ImageTypes = ImageTypes{
 		"image/gif":                true,
 		"image/png":                true,
-		"image/jpg":                true,
 		"image/jpeg":               true,
 		"image/bmp":                true,
 		"image/webp":               true,
@@ -58,6 +55,9 @@ type Options struct {
 
 // New returns a new UploadedImage object if the uploaded file could be parsed
 // and validated as an image, otherwise it returns an error.
+//
+// The key parameter should refer to the name of the file input from the
+// multipart form.
 //
 // Closing of the saved file must be handled by the user.
 func New(key string, r *http.Request, opts *Options) (*UploadedImage, error) {
@@ -103,10 +103,8 @@ func (ui *UploadedImage) Save(filename string) (string, error) {
 		ext = ".gif"
 	case "image/png":
 		ext = ".png"
-	case "image/jpg":
-		ext = ".jpg"
 	case "image/jpeg":
-		ext = ".jpeg"
+		ext = ".jpg"
 	case "image/bmp":
 		ext = ".bmp"
 	case "image/webp":
