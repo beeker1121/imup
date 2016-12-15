@@ -68,7 +68,7 @@ func New(key string, r *http.Request, opts *Options) (*UploadedImage, error) {
 			return nil, ErrFileSize
 		}
 
-		// Wrap r.Body with limitReader
+		// Wrap r.Body with our limitReader.
 		r.Body = newLimitReader(r.Body, opts.MaxFileSize)
 	}
 
@@ -159,8 +159,8 @@ func isTypeAllowed(ui *UploadedImage, types ImageTypes) error {
 	return nil
 }
 
-// limitReader wraps io.LimitedReader, Read returns ErrFileSize
-// when the limit is exceeded rather than io.EOF like io.LimitedReader.
+// limitReader defines our custom request body ReaderCloser type, which wraps
+// the standard io.LimitedReader.
 type limitReader struct {
 	r *io.LimitedReader
 	io.Closer
@@ -175,6 +175,9 @@ func newLimitReader(r io.ReadCloser, maxSize int64) io.ReadCloser {
 }
 
 // Read satisfies the io.Reader interface.
+//
+// ErrFileSize is returned when the limit is exceeded rather than io.EOF like
+// the standard io.LimitedReader.
 func (l *limitReader) Read(p []byte) (int, error) {
 	n, err := l.r.Read(p)
 	if l.r.N < 1 {
