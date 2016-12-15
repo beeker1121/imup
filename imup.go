@@ -13,7 +13,7 @@ import (
 // ImageTypes defines the allowed types for an uploaded image.
 type ImageTypes map[string]bool
 
-// Define the image types.
+// Image types according to the MIME specification.
 var (
 	GIF  ImageTypes = ImageTypes{"image/gif": true}
 	PNG  ImageTypes = ImageTypes{"image/png": true}
@@ -40,7 +40,7 @@ var (
 	}
 )
 
-// UploadedImage defines the uploaded image.
+// UploadedImage defines an uploaded image.
 type UploadedImage struct {
 	Size   int64
 	Type   string
@@ -48,7 +48,7 @@ type UploadedImage struct {
 	header *multipart.FileHeader
 }
 
-// Options defines the available options for the image upload.
+// Options defines the available options for an image upload.
 type Options struct {
 	MaxFileSize  int64
 	AllowedTypes ImageTypes
@@ -94,8 +94,8 @@ func New(key string, r *http.Request, opts *Options) (*UploadedImage, error) {
 	return ui, nil
 }
 
-// Save saves the uploaded image to the given location and returns the saved
-// file location with the file extension added on.
+// Save saves the uploaded image to the given location and returns the location
+// with the correct image extension added on.
 func (ui *UploadedImage) Save(filename string) (string, error) {
 	// Handle the file extension.
 	var ext string
@@ -131,7 +131,7 @@ func (ui *UploadedImage) Save(filename string) (string, error) {
 	return filename, nil
 }
 
-// Close closes the uploaded image.
+// Close closes an uploaded image.
 func (ui *UploadedImage) Close() {
 	ui.file.Close()
 }
