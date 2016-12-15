@@ -71,8 +71,8 @@ func New(key string, r *http.Request, opts *Options) (*UploadedImage, error) {
 		}
 
 		// Check request body length.
-		if !isValidSize(r, opts.MaxFileSize) {
-			return nil, ErrFileSize
+		if err = isValidSize(r, opts.MaxFileSize); err != nil {
+			return nil, err
 		}
 	}
 
@@ -83,8 +83,8 @@ func New(key string, r *http.Request, opts *Options) (*UploadedImage, error) {
 
 	// Check if type is allowed.
 	if len(opts.AllowedTypes) > 0 {
-		if !isTypeAllowed(ui, opts.AllowedTypes) {
-			return nil, ErrDisallowedType
+		if err = isTypeAllowed(ui, opts.AllowedTypes); err != nil {
+			return nil, err
 		}
 	}
 
@@ -137,37 +137,40 @@ func (ui *UploadedImage) Close() {
 }
 
 // isValidSize checks if the given file size is within the max limit.
-func isValidSize(r *http.Request, maxSize int64) bool {
+func isValidSize(r *http.Request, maxSize int64) error {
 	// Read the request body up to maxSize+1.
 	lr := io.LimitReader(r.Body, maxSize+1)
 	b, err := ioutil.ReadAll(lr)
 	if err != nil {
-		return false
+		return err
 	}
 
 	// If the read length is greater than the max file size.
 	if int64(len(b)) > maxSize {
-		return false
+		return ErrFileSize
 	}
 
 	// Reset the request body.
+	if err = r.Body.Close(); err != nil {
+		return err
+	}
 	r.Body = ioutil.NopCloser(bytes.NewBuffer(b))
 
-	return true
+	return nil
 }
 
 // isTypeAllowed checks if the given file type is allowed.
-func isTypeAllowed(ui *UploadedImage, types ImageTypes) bool {
+func isTypeAllowed(ui *UploadedImage, types ImageTypes) error {
 	// Get up to the first 512 bytes of data.
 	b := make([]byte, 512)
 	_, err := ui.file.Read(b)
 	if err != nil {
-		return false
+		return err
 	}
 
 	// Reset file pointer.
 	if _, err = ui.file.Seek(0, 0); err != nil {
-		return false
+		return err
 	}
 
 	// Try to detect the file type.
@@ -175,8 +178,8 @@ func isTypeAllowed(ui *UploadedImage, types ImageTypes) bool {
 
 	// Validate type.
 	if _, ok := types[ui.Type]; !ok {
-		return false
+		return ErrDisallowedType
 	}
 
-	return true
+	return nil
 }
