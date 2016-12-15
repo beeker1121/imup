@@ -4,6 +4,8 @@ imup is an image upload handler written in Go.
 
 Managing image uploads over HTTP in Go can be difficult when taking into account file type and request length checks, handling request cancellation, and so on. This package was built to abstract those details away and provide a simple API to make dealing with image uploads easier.
 
+**Special Thanks** to [@vcabbage](https://github.com/vcabbage) for the brilliant max file size solution!
+
 This project was created for [MailDB.io](https://maildb.io/), check us out!
 
 ## Features
