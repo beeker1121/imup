@@ -1,4 +1,4 @@
-# imup [![GoDoc](http://img.shields.io/badge/godoc-reference-blue.svg)](http://godoc.org/github.com/beeker1121/imup) [![License](http://img.shields.io/badge/license-mit-blue.svg)](https://raw.githubusercontent.com/beeker1121/imup/master/LICENSE) [![Go Report Card](https://goreportcard.com/badge/github.com/beeker1121/imup)](https://goreportcard.com/report/github.com/beeker1121/imup)
+# imup [![GoDoc](http://img.shields.io/badge/godoc-reference-blue.svg)](http://godoc.org/github.com/beeker1121/imup) [![License](http://img.shields.io/badge/license-mit-blue.svg)](https://raw.githubusercontent.com/beeker1121/imup/master/LICENSE) [![Go Report Card](https://goreportcard.com/badge/github.com/beeker1121/imup)](https://goreportcard.com/report/github.com/beeker1121/imup) [![Build Status](https://travis-ci.org/beeker1121/imup.svg?branch=master)](https://travis-ci.org/beeker1121/imup)
 
 imup is an image upload handler written in Go.
 
