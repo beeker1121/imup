@@ -1,9 +1,7 @@
 package imup
 
 import (
-	"bytes"
 	"io"
-	"io/ioutil"
 	"mime/multipart"
 	"net/http"
 	"os"
@@ -70,10 +68,8 @@ func New(key string, r *http.Request, opts *Options) (*UploadedImage, error) {
 			return nil, ErrFileSize
 		}
 
-		// Check request body length.
-		if err = isValidSize(r, opts.MaxFileSize); err != nil {
-			return nil, err
-		}
+		// Wrap r.Body with limitReader
+		r.Body = newLimitReader(r.Body, opts.MaxFileSize)
 	}
 
 	// Try to parse the multipart file from the request.
@@ -136,29 +132,6 @@ func (ui *UploadedImage) Close() {
 	ui.file.Close()
 }
 
-// isValidSize checks if the given file size is within the max limit.
-func isValidSize(r *http.Request, maxSize int64) error {
-	// Read the request body up to maxSize+1.
-	lr := io.LimitReader(r.Body, maxSize+1)
-	b, err := ioutil.ReadAll(lr)
-	if err != nil {
-		return err
-	}
-
-	// If the read length is greater than the max file size.
-	if int64(len(b)) > maxSize {
-		return ErrFileSize
-	}
-
-	// Reset the request body.
-	if err = r.Body.Close(); err != nil {
-		return err
-	}
-	r.Body = ioutil.NopCloser(bytes.NewBuffer(b))
-
-	return nil
-}
-
 // isTypeAllowed checks if the given file type is allowed.
 func isTypeAllowed(ui *UploadedImage, types ImageTypes) error {
 	// Get up to the first 512 bytes of data.
@@ -182,4 +155,26 @@ func isTypeAllowed(ui *UploadedImage, types ImageTypes) error {
 	}
 
 	return nil
+}
+
+// limitReader wraps io.LimitedReader, Read returns ErrFileSize
+// when the limit is exceeded rather than io.EOF like io.LimitedReader
+type limitReader struct {
+	r *io.LimitedReader
+	io.Closer
+}
+
+func newLimitReader(r io.ReadCloser, maxSize int64) io.ReadCloser {
+	return &limitReader{
+		r:      io.LimitReader(r, maxSize+1).(*io.LimitedReader),
+		Closer: r,
+	}
+}
+
+func (l *limitReader) Read(p []byte) (int, error) {
+	n, err := l.r.Read(p)
+	if l.r.N < 1 {
+		return n, ErrFileSize
+	}
+	return n, err
 }
