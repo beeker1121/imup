@@ -122,14 +122,16 @@ func (ui *UploadedImage) Save(filename string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	ui.Close()
+	if err = ui.Close(); err != nil {
+		return "", err
+	}
 
 	return filename, nil
 }
 
 // Close closes an uploaded image.
-func (ui *UploadedImage) Close() {
-	ui.file.Close()
+func (ui *UploadedImage) Close() error {
+	return ui.file.Close()
 }
 
 // isTypeAllowed checks if the given file type is allowed.
