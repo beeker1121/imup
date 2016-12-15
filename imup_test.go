@@ -7,6 +7,7 @@ import (
 	"image/png"
 	"io"
 	"mime/multipart"
+	"net/http"
 	"net/http/httptest"
 	"os"
 	"testing"
@@ -67,17 +68,12 @@ func deleteTestTXT() {
 	os.Remove(testTXTName)
 }
 
-func TestNew(t *testing.T) {
-	err := createTestPNG()
+// createRequest creates a test request.
+func createRequest(filename string) (*http.Request, error) {
+	// Get file handler.
+	file, err := os.Open(filename)
 	if err != nil {
-		t.Fatal(err)
-	}
-	defer deleteTestPNG()
-
-	// Get file handler for test PNG image.
-	file, err := os.Open(testPNGName)
-	if err != nil {
-		t.Fatal(err)
+		return nil, err
 	}
 	defer file.Close()
 
@@ -86,12 +82,12 @@ func TestNew(t *testing.T) {
 	mw := multipart.NewWriter(&b)
 
 	// Create a new form file.
-	fw, err := mw.CreateFormFile("file", testPNGName)
+	fw, err := mw.CreateFormFile("file", filename)
 	if err != nil {
-		t.Fatal(err)
+		return nil, err
 	}
 	if _, err = io.Copy(fw, file); err != nil {
-		t.Fatal(err)
+		return nil, err
 	}
 	mw.Close()
 
@@ -101,6 +97,58 @@ func TestNew(t *testing.T) {
 	// Set the multipart/form-data Content-Type.
 	req.Header.Set("Content-Type", mw.FormDataContentType())
 
+	return req, nil
+}
+
+func TestNewAndSave(t *testing.T) {
+	err := createTestPNG()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer deleteTestPNG()
+
+	// Create a new test request.
+	req, err := createRequest(testPNGName)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Upload the image.
+	ui, err := New("file", req, &Options{
+		MaxFileSize:  1024,
+		AllowedTypes: PopularTypes,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer ui.Close()
+
+	// Save the image.
+	filename, err := ui.Save("testsave")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err = os.Remove(filename); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestContentLength(t *testing.T) {
+	err := createTestPNG()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer deleteTestPNG()
+
+	// Create a new test request.
+	req, err := createRequest(testPNGName)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req.Header.Set("Content-Length", "1024")
+
 	// Upload the image.
 	_, err = New("file", req, &Options{
 		MaxFileSize:  1024,
@@ -108,5 +156,78 @@ func TestNew(t *testing.T) {
 	})
 	if err != nil {
 		t.Fatal(err)
+	}
+}
+
+func TestErrFileSize(t *testing.T) {
+	err := createTestPNG()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer deleteTestPNG()
+
+	// Create a new test request.
+	req, err := createRequest(testPNGName)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req.Header.Set("Content-Length", "1025")
+
+	// Upload the image.
+	_, err = New("file", req, &Options{
+		MaxFileSize:  1024,
+		AllowedTypes: PopularTypes,
+	})
+	if err != ErrFileSize {
+		t.Errorf("Expected ErrFileSize, got %s", err)
+	}
+}
+
+func TestErrFileSizeSpoofed(t *testing.T) {
+	err := createTestPNG()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer deleteTestPNG()
+
+	// Create a new test request.
+	req, err := createRequest(testPNGName)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req.Header.Set("Content-Length", "128")
+
+	// Upload the image.
+	_, err = New("file", req, &Options{
+		MaxFileSize:  128,
+		AllowedTypes: PopularTypes,
+	})
+	if err != ErrFileSize {
+		t.Errorf("Expected ErrFileSize, got %s", err)
+	}
+}
+
+func TestErrDisallowedType(t *testing.T) {
+	err := createTestTXT()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer deleteTestTXT()
+
+	// Create a new test request.
+	req, err := createRequest(testTXTName)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Upload the image.
+	_, err = New("file", req, &Options{
+		MaxFileSize:  1024,
+		AllowedTypes: PopularTypes,
+	})
+	if err != ErrDisallowedType {
+		t.Errorf("Expected ErrDisallowedType, got %s", err)
 	}
 }
