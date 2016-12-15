@@ -41,7 +41,6 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		...
 	}
-	defer ui.Close()
 
 	// Save the image.
 	filename, err := ui.Save("images/test")

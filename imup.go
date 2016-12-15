@@ -59,8 +59,6 @@ type Options struct {
 //
 // The key parameter should refer to the name of the file input from the
 // multipart form.
-//
-// Closing of the saved file must be handled by the user.
 func New(key string, r *http.Request, opts *Options) (*UploadedImage, error) {
 	var err error
 	ui := &UploadedImage{}
@@ -96,6 +94,8 @@ func New(key string, r *http.Request, opts *Options) (*UploadedImage, error) {
 
 // Save saves the uploaded image to the given location and returns the location
 // with the correct image extension added on.
+//
+// The underlying multipart image file is automatically closed.
 func (ui *UploadedImage) Save(filename string) (string, error) {
 	// Handle the file extension.
 	var ext string
@@ -127,6 +127,7 @@ func (ui *UploadedImage) Save(filename string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	ui.Close()
 
 	return filename, nil
 }

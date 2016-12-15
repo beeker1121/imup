@@ -121,7 +121,6 @@ func TestNewAndSave(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer ui.Close()
 
 	// Save the image.
 	filename, err := ui.Save("testsave")
