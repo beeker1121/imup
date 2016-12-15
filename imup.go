@@ -169,7 +169,7 @@ type limitReader struct {
 // newLimitReader creates a new limitReader.
 func newLimitReader(r io.ReadCloser, maxSize int64) io.ReadCloser {
 	return &limitReader{
-		r:      &io.LimitedReader{R: r, N: maxSize + 1},
+		r:      &io.LimitedReader{r, maxSize + 1},
 		Closer: r,
 	}
 }
