@@ -42,7 +42,6 @@ var (
 
 // UploadedImage defines an uploaded image.
 type UploadedImage struct {
-	Size   int64
 	Type   string
 	file   multipart.File
 	header *multipart.FileHeader
