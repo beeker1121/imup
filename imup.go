@@ -9,33 +9,24 @@ import (
 )
 
 // ImageTypes defines the allowed types for an uploaded image.
-type ImageTypes map[string]bool
+type ImageTypes []string
 
 // Image types according to the MIME specification.
-var (
-	GIF  ImageTypes = ImageTypes{"image/gif": true}
-	PNG  ImageTypes = ImageTypes{"image/png": true}
-	JPEG ImageTypes = ImageTypes{"image/jpeg": true}
-	BMP  ImageTypes = ImageTypes{"image/bmp": true}
-	WEBP ImageTypes = ImageTypes{"image/webp": true}
-	ICO  ImageTypes = ImageTypes{"image/vnd.microsoft.icon": true}
+const (
+	GIF  = "image/gif"
+	PNG  = "image/png"
+	JPEG = "image/jpeg"
+	BMP  = "image/bmp"
+	WEBP = "image/webp"
+	ICO  = "image/vnd.microsoft.icon"
+)
 
-	// Convenience type for popular web image types.
-	PopularTypes ImageTypes = ImageTypes{
-		"image/gif":  true,
-		"image/png":  true,
-		"image/jpeg": true,
-	}
+var (
+	// Convenience type for popular image types.
+	PopularTypes = ImageTypes{GIF, PNG, JPEG}
 
 	// Convenience type for all image types.
-	AllTypes ImageTypes = ImageTypes{
-		"image/gif":                true,
-		"image/png":                true,
-		"image/jpeg":               true,
-		"image/bmp":                true,
-		"image/webp":               true,
-		"image/vnd.microsoft.icon": true,
-	}
+	AllTypes = ImageTypes{GIF, PNG, JPEG, BMP, WEBP, ICO}
 )
 
 // UploadedImage defines an uploaded image.
@@ -95,17 +86,17 @@ func (ui *UploadedImage) Save(filename string) (string, error) {
 	// Handle the file extension.
 	var ext string
 	switch ui.Type {
-	case "image/gif":
+	case GIF:
 		ext = ".gif"
-	case "image/png":
+	case PNG:
 		ext = ".png"
-	case "image/jpeg":
+	case JPEG:
 		ext = ".jpg"
-	case "image/bmp":
+	case BMP:
 		ext = ".bmp"
-	case "image/webp":
+	case WEBP:
 		ext = ".webp"
-	case "image/vnd.microsoft.icon":
+	case ICO:
 		ext = ".ico"
 	}
 	filename += ext
@@ -152,11 +143,13 @@ func isTypeAllowed(ui *UploadedImage, types ImageTypes) error {
 	ui.Type = http.DetectContentType(b)
 
 	// Validate type.
-	if _, ok := types[ui.Type]; !ok {
-		return ErrDisallowedType
+	for _, t := range types {
+		if ui.Type == t {
+			return nil
+		}
 	}
 
-	return nil
+	return ErrDisallowedType
 }
 
 // limitReader defines our custom request body ReaderCloser type, which wraps
