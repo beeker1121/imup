@@ -21,12 +21,10 @@ const (
 	ICO  = "image/vnd.microsoft.icon"
 )
 
+// Convenience set of image types.
 var (
-	// Convenience type for popular image types.
 	PopularTypes = ImageTypes{GIF, PNG, JPEG}
-
-	// Convenience type for all image types.
-	AllTypes = ImageTypes{GIF, PNG, JPEG, BMP, WEBP, ICO}
+	AllTypes     = ImageTypes{GIF, PNG, JPEG, BMP, WEBP, ICO}
 )
 
 // UploadedImage defines an uploaded image.
